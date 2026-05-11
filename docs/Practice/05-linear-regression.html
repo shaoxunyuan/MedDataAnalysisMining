@@ -91,6 +91,12 @@ mel = as.data.frame(Melanoma)</code></pre>
           <div class="step">Step 1 / 拟合与查看摘要</div>
           <pre><code class="language-r">fit1 = lm(thickness ~ age, data = mel)
 summary(fit1)</code></pre>
+          <div class="callout tip">
+            <strong>系数表四列怎么读</strong>：<code>Estimate</code> 是在样本数据上估计出来的系数；<code>Std. Error</code> 越大表示估计越不确定；<code>t value</code> 大致是“估计值 ÷ 标准误”；<code>Pr(&gt;|t|)</code> 是在检验“该系数是否为 0”（在模型其他项固定的前提下）。截距 <code>(Intercept)</code> 表示当 <code>age = 0</code> 时的预测值，多数情况下<strong>没有临床/业务含义</strong>，不必强行解释。
+          </div>
+          <div class="callout tip">
+            <strong>R² 与 Adjusted R²</strong>：<code>Multiple R-squared</code> 描述模型解释了多少结局变量的变异（0–1，越大拟合越好，但会随加变量而机械上升）；<code>Adjusted R-squared</code> 带一点惩罚，更适合粗看“加入变量是否划算”。两者都不要当成因果证据。
+          </div>
 
           <div class="step">Step 1b / 全局检验：模型是否有解释力（F 检验）</div>
           <pre><code class="language-r">anova(fit1)</code></pre>
@@ -117,6 +123,9 @@ coef(fit1_z)
           <h3 id="p1-ci">1.2 置信区间与预测</h3>
           <div class="step">Step 3 / 系数置信区间</div>
           <pre><code class="language-r">confint(fit1)</code></pre>
+          <div class="callout tip">
+            <strong><code>confint()</code> 输出是什么</strong>：默认给出各系数（含截距）的近似 95% 置信区间。对斜率 <code>age</code> 而言，若区间<strong>完全在 0 的同侧</strong>（都为正或都为负），与“斜率显著不为 0”的结论通常一致；若区间<strong>跨过 0</strong>，则要谨慎声称“年龄与厚度存在稳定方向的线性关系”。
+          </div>
 
           <div class="step">Step 4 / 给定年龄的预测（点预测）</div>
           <pre><code class="language-r">newd = data.frame(age = c(30, 50, 70))
@@ -136,6 +145,9 @@ summary(fit1)$sigma</code></pre>
           <div class="callout tip">
             <strong>写作模板</strong>：报告预测时最好写明你在预测<strong>均值</strong>还是<strong>个体</strong>；同一模型下，个体预测区间通常明显宽于均值置信区间。
           </div>
+          <div class="callout warn">
+            <strong>外推提醒</strong>：<code>predict()</code> 对任意数字都能给出输出，但若 <code>age</code> 落在样本几乎没覆盖的范围（过小或过大），线性关系未必成立，区间也会不可靠。实务上可先 <code>range(mel$age)</code> 看你预测点是否在数据主力范围内。
+          </div>
         </section>
 
         <section class="exercise" id="p2">
@@ -149,6 +161,12 @@ summary(fit1)$sigma</code></pre>
           <pre><code class="language-r">fit2 = lm(thickness ~ age + factor(sex) + ulcer + year, data = mel)
 summary(fit2)
 confint(fit2)</code></pre>
+          <div class="callout tip">
+            <strong>偏回归系数一句话</strong>：在<strong>固定（adjust for）</strong>模型里其他变量不变的前提下，某一变量增加 1 个单位，结局平均变化多少。例如 <code>ulcer</code> 在原数据多为 0/1 数值编码时，可把它理解为两组间的平均厚度差异（仍需结合尺度与残差诊断判断是否合适）。
+          </div>
+          <div class="callout tip">
+            <strong>为什么要把 <code>sex</code> 写成 <code>factor(sex)</code></strong>：即使底层编码是 0/1，写成因子能让 <code>summary</code> 按“水平 vs 基准水平”打印系数名，减少把分类变量误当成“连续刻度 0.1、0.2 也能算”的误解。
+          </div>
 
           <div class="step">Step 5b / 对照 levels：确认因子基准水平（决定截距与哑变量的符号）</div>
           <pre><code class="language-r">levels(factor(mel$sex))
@@ -164,6 +182,9 @@ confint(fit2)</code></pre>
           <pre><code class="language-r">anova(fit1, fit2)</code></pre>
           <div class="callout ok">
             <strong>结果</strong>：这是一般线性模型的<strong>嵌套</strong>比较（fit1 变量 ⊆ fit2），可用最后一行的 <code>F</code> 与 <code>Pr(&gt;F)</code> 判断新增变量整体是否带来显著增量解释。
+          </div>
+          <div class="callout tip">
+            <strong>和单个系数的 <code>p</code> 值有何分工</strong>：<code>anova(fit1, fit2)</code> 回答“<strong>一批</strong>新增变量合在一起有没有显著提升解释”；而 <code>summary(fit2)</code> 里每个系数各自的 <code>p</code> 回答“在<strong>当前模型设定</strong>下，这一项是否显著”。两者关注点不同，不必强行一致。
           </div>
 
           <div class="split"></div>
@@ -199,24 +220,20 @@ cbind(row_index = top, cook = ck[top], mel[top, c("time", "status", "sex", "age"
 
         <section class="exercise" id="p3">
           <h2>3. 实验内容（提交要求）</h2>
-          <div class="callout tip"><strong>提交要求</strong>：按下列条目给出相应输出与简要说明。</div>
+          <div class="callout tip"><strong>提交说明</strong>：下列为最简清单；第 1–2 节中的步骤与提示用于自学与课堂讨论，不必逐条抄进作业。</div>
 
           <div class="starter-label">A. 简单线性回归</div>
           <ul class="checklist">
-            <li><strong>模型输出</strong>：提交 <code>summary(fit1)</code> 的关键行（系数表与 R²）。</li>
-            <li><strong>全局检验</strong>：提交 <code>anova(fit1)</code> 中与模型相关的 <code>F</code>/<code>p</code>（或 <code>summary</code> 底部 F 统计量），并用一句话说明它在检验什么。</li>
-            <li><strong>解释</strong>：用一句话解释 <code>age</code> 的回归系数代表什么。</li>
-            <li><strong>区间预测</strong>：对 <code>age=50</code> 同时给出 <code>interval="confidence"</code> 与 <code>interval="prediction"</code> 的 95% 区间，并用一句话解释二者宽窄差异的含义。</li>
-            <li><strong>图</strong>：提交图 1（或同类图）截图。</li>
+            <li>提交 <code>summary(fit1)</code> 中的<strong>系数表</strong>与 <strong>R²</strong>（可截图或粘贴文本）。</li>
+            <li>附<strong>图 1</strong>（散点图 + 回归线）。</li>
+            <li>用<strong>一两句话</strong>说明：<code>age</code> 的斜率系数在说什么（注意是关联，勿写因果）。</li>
           </ul>
 
           <div class="starter-label">B. 多重回归与诊断</div>
           <ul class="checklist">
-            <li><strong>模型输出</strong>：提交 <code>summary(fit2)</code> 的关键行，并说明与 <code>fit1</code> 相比你观察到的 1 个差异（系数变化或解释差异）。</li>
-            <li><strong>嵌套比较</strong>：提交 <code>anova(fit1, fit2)</code> 的最后一行，并用一句话给出结论（新增变量整体是否显著）。</li>
-            <li><strong>因子基准</strong>：说明你模型里 <code>factor(sex)</code> 的基准水平是哪个编码值，以及另一个水平的系数代表什么。</li>
-            <li><strong>诊断</strong>：提交图 2（或同类诊断图）截图，并指出你认为最需要关注的一张（1 句话）。</li>
-            <li><strong>影响点</strong>：提交 Cook 距离最大的前 3 个值，并说明你会如何处理/核对（1–2 句话）。</li>
+            <li>提交 <code>summary(fit2)</code> 中的<strong>系数表</strong>（可截图或粘贴文本）。</li>
+            <li>附<strong>图 2</strong>（四合一诊断图）。</li>
+            <li>列出 Cook 距离<strong>最大的 3 个数值</strong>（无需展开个案核对过程）。</li>
           </ul>
         </section>
       </article>
