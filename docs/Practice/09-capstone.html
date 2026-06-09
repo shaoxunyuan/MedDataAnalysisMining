@@ -19,7 +19,18 @@
     .step { margin: 12px 0 8px; font-size: 13px; color: var(--ink-muted); font-weight: 800; letter-spacing: 0.02em; }
     .checklist { margin: 8px 0 14px 1.2em; color: var(--ink-light); }
     .checklist li { margin: 6px 0; }
+    .mini { font-size: 13px; color: var(--ink-muted); line-height: 1.65; }
     .split { border-top: 1px dashed var(--border); margin: 18px 0; }
+    .figure-card { border: 1px solid var(--border); background: #fff; padding: 10px; margin: 10px 0 16px; }
+    .figure-card img { width: 100%; height: auto; display: block; }
+    .figure-card figcaption { font-size: 12px; color: var(--ink-muted); line-height: 1.55; margin-top: 8px; }
+    .figure-card.narrow { max-width: 820px; margin: 0 auto 16px; }
+    .flow-list { margin: 10px 0 16px 1.2em; color: var(--ink-light); line-height: 1.75; }
+    .flow-list li { margin: 4px 0; }
+    .var-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0 18px; }
+    .var-table th, .var-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+    .var-table th { background: rgba(255,255,255,0.7); font-weight: 700; color: var(--ink); }
+    .var-table td code { font-size: 12px; }
   </style>
 </head>
 <body>
@@ -28,11 +39,42 @@
       <div class="toc-scroll">
         <div class="toc__title">目录</div>
         <ul class="book-nav toc">
-          <li><a class="lv1" href="#p0">0. 载入数据</a></li>
-          <li><a class="lv1" href="#p1">1. 描述统计与图表</a></li>
-          <li><a class="lv1" href="#p2">2. 推断：分组比较</a></li>
-          <li><a class="lv1" href="#p3">3. 回归建模：线性 vs Logistic</a></li>
-          <li><a class="lv1" href="#p4">4. 结果整理为“可报告”表格</a></li>
+          <li>
+            <a class="lv1" href="#p0">0. 载入数据</a>
+            <ul class="lv2">
+              <li><a href="#p0-load"><span class="n">0.1</span><span>载入与结构</span></a></li>
+              <li><a href="#p0-vars"><span class="n">0.2</span><span>变量角色与研究问题</span></a></li>
+            </ul>
+          </li>
+          <li>
+            <a class="lv1" href="#p1">1. 描述统计与图表</a>
+            <ul class="lv2">
+              <li><a href="#p1-uni"><span class="n">1.1</span><span>单变量描述</span></a></li>
+              <li><a href="#p1-grp"><span class="n">1.2</span><span>分组描述与作图</span></a></li>
+              <li><a href="#p1-cat"><span class="n">1.3</span><span>分类变量频数</span></a></li>
+            </ul>
+          </li>
+          <li>
+            <a class="lv1" href="#p2">2. 推断：分组比较</a>
+            <ul class="lv2">
+              <li><a href="#p2-cont"><span class="n">2.1</span><span>连续结局比较</span></a></li>
+              <li><a href="#p2-cat"><span class="n">2.2</span><span>分类变量检验</span></a></li>
+            </ul>
+          </li>
+          <li>
+            <a class="lv1" href="#p3">3. 回归建模</a>
+            <ul class="lv2">
+              <li><a href="#p3-lm"><span class="n">3.1</span><span>线性回归</span></a></li>
+              <li><a href="#p3-glm"><span class="n">3.2</span><span>Logistic 回归</span></a></li>
+            </ul>
+          </li>
+          <li>
+            <a class="lv1" href="#p4">4. 整理输出</a>
+            <ul class="lv2">
+              <li><a href="#p4-tbl"><span class="n">4.1</span><span>模型结果表</span></a></li>
+              <li><a href="#p4-rpt"><span class="n">4.2</span><span>报告段落模板</span></a></li>
+            </ul>
+          </li>
           <li><a class="lv1" href="#p5">5. 提交要求</a></li>
         </ul>
       </div>
@@ -42,80 +84,254 @@
       <article class="article">
         <h1>综合练习：从数据到报告</h1>
         <div class="practice-lead">
-          本页把前面章节练习的核心环节串起来：载入数据 → 描述统计 → 分组比较 → 回归建模 → 整理输出。数据仍使用 <code>MASS::Melanoma</code>，以便专注流程与表达。
+          本页将前面各章节的分析环节串联为一条完整流程：<strong>载入数据 → 描述统计 → 分组比较 → 回归建模 → 整理输出</strong>。数据使用 <code>MASS::Melanoma</code>（黑色素瘤随访数据），重点在于形成<strong>可复现脚本</strong>与<strong>可写入实验报告</strong>的图表、表格与文字结论。
         </div>
         <div class="lesson-meta">
-          <div class="meta-row"><div class="meta-k">学习目标</div><div>把一段分析写成可复现脚本；能产出 1 张图 + 1 张表 + 1 段结论文字</div></div>
+          <div class="meta-row"><div class="meta-k">学习目标</div><div>能按固定流程完成一次小型数据分析；能区分描述、推断与回归各自回答的问题；能产出图、表与结论段落，并保证脚本可重复运行</div></div>
+          <div class="meta-row"><div class="meta-k">分析流程</div><div>见下方五步；每一步对应本页一个主要章节，建议按顺序完成</div></div>
+        </div>
+
+        <div class="callout tip">
+          <strong>五步流程（本练习的主线）</strong>
+          <ol class="flow-list">
+            <li><strong>载入数据</strong>：读入 <code>Melanoma</code>，确认变量类型与样本量。</li>
+            <li><strong>描述统计</strong>：给出主要变量的分布与分组概况，配 1–2 张图。</li>
+            <li><strong>分组比较</strong>：对关键暴露（如 <code>ulcer</code>）与结局（如 <code>thickness</code>）做推断检验，报告效应与不确定性。</li>
+            <li><strong>回归建模</strong>：在线性模型与 Logistic 模型中同时调整多个协变量，得到调整后的关联估计。</li>
+            <li><strong>整理输出</strong>：把数值结果整理成表格，并写成 2–3 段可提交的报告文字。</li>
+          </ol>
+        </div>
+
+        <div class="callout warn">
+          <strong>表述边界</strong>：本练习使用的是观察性队列数据，回归与检验结果描述<strong>关联（association）</strong>，不宜直接写成“某因素导致某结局”的因果结论，除非有额外研究设计支撑。
         </div>
 
         <section class="exercise" id="p0">
           <h2>0. 载入数据</h2>
+
+          <h3 id="p0-load">0.1 载入与结构</h3>
+          <div class="callout tip">
+            <strong>本节目标</strong>：得到分析主表 <code>mel</code>，并确认各列类型、缺失与样本量，作为后续所有步骤的共同起点。
+          </div>
+          <div class="step">Step 1 / 安装、加载并载入数据</div>
           <pre><code class="language-r">options(repos = c(CRAN = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"))
 if (!requireNamespace("MASS", quietly = TRUE)) install.packages("MASS")
 library(MASS)
+
 data(Melanoma)
-mel = as.data.frame(Melanoma)
-str(mel)</code></pre>
+mel = as.data.frame(Melanoma)</code></pre>
+
+          <div class="step">Step 2 / 结构、前几行与缺失概况</div>
+          <pre><code class="language-r">str(mel)
+head(mel, 6)
+summary(mel)
+colSums(is.na(mel))</code></pre>
+          <div class="callout ok">
+            <strong>结果</strong>：<code>Melanoma</code> 为 205 行 × 7 列的数据框；本数据集各变量通常无缺失，可直接进入描述与建模。若后续自行构造衍生变量（如 <code>death</code>），需在同一脚本中统一生成。
+          </div>
+
+          <h3 id="p0-vars">0.2 变量角色与研究问题</h3>
+          <p class="mini">在综合练习中，需要事先明确“谁当结局、谁当暴露、谁当协变量”。下表给出本页采用的示例设定；正式报告中应在方法部分用同样方式写清变量定义。</p>
+
+          <table class="var-table" aria-label="Melanoma 变量角色">
+            <thead>
+              <tr><th>变量</th><th>含义（简要）</th><th>本练习中的角色</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>thickness</code></td><td>肿瘤厚度（连续）</td><td>连续结局（线性回归）；Logistic 中的预测变量</td></tr>
+              <tr><td><code>status</code></td><td>随访状态（1=死亡，2=存活，3=死于其他原因）</td><td>用于构造二分类结局 <code>death</code></td></tr>
+              <tr><td><code>ulcer</code></td><td>溃疡（0/1）</td><td>主要暴露/分组变量（描述与推断）</td></tr>
+              <tr><td><code>age</code></td><td>年龄</td><td>协变量</td></tr>
+              <tr><td><code>sex</code></td><td>性别（0/1 编码）</td><td>协变量（建模时用 <code>factor(sex)</code>）</td></tr>
+              <tr><td><code>year</code></td><td>年份</td><td>协变量</td></tr>
+              <tr><td><code>time</code></td><td>随访时间</td><td>本练习暂不纳入主模型，可在扩展分析中使用</td></tr>
+            </tbody>
+          </table>
+
+          <div class="callout tip">
+            <strong>示例研究问题（贯穿全页）</strong>
+            <ul class="flow-list">
+              <li>描述：<code>thickness</code> 在总体及按 <code>ulcer</code> 分组时的分布如何？</li>
+              <li>推断：有溃疡与无溃疡者的 <code>thickness</code> 是否存在差异？</li>
+              <li>回归：在调整年龄、性别、年份后，<code>ulcer</code> 与 <code>thickness</code> 是否仍有关联？</li>
+              <li>回归：在调整协变量后，哪些因素与<strong>死亡风险</strong>（<code>death</code>）相关联？</li>
+            </ul>
+          </div>
         </section>
 
         <section class="exercise" id="p1">
           <h2>1. 描述统计与图表</h2>
-          <div class="step">Step 1 / 单变量描述：thickness、age</div>
+          <div class="callout tip">
+            <strong>本节目标</strong>：用数字与图形刻画数据“长什么样”，为推断与建模提供背景。描述统计<strong>不检验显著性</strong>，重在呈现分布、中心趋势与离散程度。
+          </div>
+
+          <h3 id="p1-uni">1.1 单变量描述</h3>
+          <div class="step">Step 3 / 连续变量：thickness、age</div>
           <pre><code class="language-r">summary(mel$thickness)
-summary(mel$age)</code></pre>
+summary(mel$age)
 
-          <div class="step">Step 2 / 分组描述：按 ulcer 分组的 thickness</div>
-          <pre><code class="language-r">by(mel$thickness, mel$ulcer, summary)</code></pre>
+c(thickness_mean = mean(mel$thickness),
+  thickness_sd   = sd(mel$thickness),
+  age_mean       = mean(mel$age),
+  age_sd         = sd(mel$age))</code></pre>
+          <div class="callout tip">
+            <strong>怎么写进报告</strong>：连续变量常用“均值 ± 标准差”或“中位数（四分位距）”。若分布明显偏态（如 <code>thickness</code> 右偏），可同时报告 <code>median()</code> 与 <code>quantile()</code>，并在文字中说明右偏特征。
+          </div>
 
-          <div class="step">Step 3 / 作图：箱线图</div>
+          <div class="step">Step 4 / 偏态检查（可选）：thickness 直方图</div>
+          <pre><code class="language-r">hist(mel$thickness, breaks = 20, col = "#93c5fd", border = "white",
+     main = "thickness distribution", xlab = "thickness")</code></pre>
+
+          <h3 id="p1-grp">1.2 分组描述与作图</h3>
+          <div class="step">Step 5 / 按 ulcer 分组的 thickness 描述</div>
+          <pre><code class="language-r">by(mel$thickness, mel$ulcer, summary)
+
+aggregate(thickness ~ ulcer, data = mel,
+          FUN = function(x) c(n = length(x), mean = mean(x), sd = sd(x)))</code></pre>
+
+          <div class="step">Step 6 / 箱线图：直观比较两组位置与离群点</div>
           <pre><code class="language-r">boxplot(thickness ~ factor(ulcer), data = mel,
         xlab = "ulcer (0/1)", ylab = "thickness",
-        main = "thickness by ulcer")</code></pre>
+        main = "thickness by ulcer",
+        col = c("#93c5fd", "#bbf7d0"), border = "white")</code></pre>
+          <figure class="figure-card narrow" aria-label="thickness 按 ulcer 分组箱线图">
+            <img src="figures/p04-boxplot-thickness-ulcer.png" alt="thickness by ulcer boxplot">
+            <figcaption>图 1：按 <code>ulcer</code> 分组的 <code>thickness</code> 箱线图。箱线图适合展示中位数、四分位距与离群点，是描述阶段最常用的分组比较图之一。</figcaption>
+          </figure>
+
+          <h3 id="p1-cat">1.3 分类变量频数</h3>
+          <div class="step">Step 7 / 频数与构成比</div>
+          <pre><code class="language-r">table(mel$ulcer)
+prop.table(table(mel$ulcer))
+
+table(mel$sex)
+table(mel$ulcer, mel$sex)
+round(prop.table(table(mel$ulcer, mel$sex), 2) * 100, 1)</code></pre>
+          <div class="callout tip">
+            <strong>列联表读法</strong>：<code>prop.table(..., 2)</code> 按列（每个 <code>sex</code> 组）计算构成比，便于比较不同性别中 <code>ulcer=1</code> 的比例；行百分比则用 <code>prop.table(..., 1)</code>。
+          </div>
         </section>
 
         <section class="exercise" id="p2">
           <h2>2. 推断：分组比较</h2>
-          <div class="step">Step 4 / 两组比较：Welch t 与 Wilcoxon</div>
+          <div class="callout tip">
+            <strong>本节目标</strong>：在描述基础上，对组间差异做统计检验，并报告<strong>效应量</strong>与<strong>不确定性</strong>（如均值差的置信区间），而非仅给出 <code>p</code> 值。
+          </div>
+
+          <h3 id="p2-cont">2.1 连续结局比较</h3>
+          <div class="step">Step 8 / Welch t 检验与 Wilcoxon 秩和检验</div>
           <pre><code class="language-r">t_res = t.test(thickness ~ ulcer, data = mel)
 w_res = wilcox.test(thickness ~ ulcer, data = mel)
 
+t_res$estimate          # 两组均值
+t_res$conf.int          # 均值差的 95%CI
 t_res$p.value
 w_res$p.value</code></pre>
+          <div class="callout tip">
+            <strong>方法选择</strong>：<code>t.test</code> 默认 Welch 校正（不假定两组方差相等）。当 <code>thickness</code> 明显偏态或离群点较多时，可同时报告 <code>wilcox.test</code> 作为稳健对照；两者结论方向一致时，报告更简洁。
+          </div>
+
+          <div class="step">Step 9 / 效应量：Cohen's d（量级参考）</div>
+          <pre><code class="language-r">x0 = mel$thickness[mel$ulcer == 0]
+x1 = mel$thickness[mel$ulcer == 1]
+sp = sqrt(((length(x0) - 1) * var(x0) + (length(x1) - 1) * var(x1)) /
+          (length(x0) + length(x1) - 2))
+d  = (mean(x1) - mean(x0)) / sp
+d</code></pre>
+
+          <h3 id="p2-cat">2.2 分类变量检验</h3>
+          <div class="step">Step 10 / ulcer × sex 列联表与卡方 / Fisher</div>
+          <pre><code class="language-r">tb = table(ulcer = mel$ulcer, sex = mel$sex)
+tb
+
+chi = chisq.test(tb)
+chi$expected
+fisher.test(tb)</code></pre>
+          <div class="callout warn">
+            <strong>期望频数</strong>：当 <code>chisq.test</code> 的期望频数过小（常见经验：超过 20% 格子 &lt; 5）时，优先报告 <code>fisher.test</code> 的精确 <code>p</code> 值。
+          </div>
         </section>
 
         <section class="exercise" id="p3">
-          <h2>3. 回归建模：线性 vs Logistic</h2>
-          <div class="step">Step 5 / 线性回归：thickness 作为连续结局</div>
-          <pre><code class="language-r">fit_lm = lm(thickness ~ age + factor(sex) + ulcer + year, data = mel)
-summary(fit_lm)</code></pre>
+          <h2>3. 回归建模</h2>
+          <div class="callout tip">
+            <strong>本节目标</strong>：在同时调整多个协变量后估计关联强度。线性回归回答“平均厚度差多少”；Logistic 回归回答“死亡优势比（OR）多大”。
+          </div>
 
-          <div class="step">Step 6 / Logistic 回归：death 作为二分类结局</div>
+          <h3 id="p3-lm">3.1 线性回归</h3>
+          <div class="step">Step 11 / 拟合：thickness 为连续结局</div>
+          <pre><code class="language-r">fit_lm = lm(thickness ~ age + factor(sex) + ulcer + year, data = mel)
+summary(fit_lm)
+confint(fit_lm)</code></pre>
+          <div class="callout tip">
+            <strong>系数解释</strong>：在固定 <code>age</code>、<code>sex</code>、<code>year</code> 的前提下，<code>ulcer</code> 从 0 变为 1 时，<code>thickness</code> 的平均变化量即为 <code>ulcer</code> 的回归系数（单位与 <code>thickness</code> 一致）。
+          </div>
+
+          <div class="step">Step 12 / 散点图与简单线性关系（背景图，可选）</div>
+          <pre><code class="language-r">plot(mel$age, mel$thickness,
+     xlab = "age", ylab = "thickness",
+     pch = 19, col = rgb(13/255, 148/255, 136/255, 0.35))
+abline(lm(thickness ~ age, data = mel), col = "#b91c1c", lwd = 2)</code></pre>
+          <figure class="figure-card narrow" aria-label="thickness 与 age 散点图">
+            <img src="figures/p05-scatter-fit1.png" alt="scatter thickness vs age">
+            <figcaption>图 2：<code>thickness</code> 与 <code>age</code> 的散点图及简单线性拟合线。多重回归中 <code>age</code> 的系数是在调整其他变量后的偏关联。</figcaption>
+          </figure>
+
+          <div class="step">Step 13 / 残差诊断（简要）</div>
+          <pre><code class="language-r">par(mfrow = c(2, 2))
+plot(fit_lm, which = 1:4)
+par(mfrow = c(1, 1))</code></pre>
+          <figure class="figure-card" aria-label="线性回归诊断图">
+            <img src="figures/p05-diagnostic-fit2.png" alt="diagnostic plots for linear regression">
+            <figcaption>图 3：线性回归四合一诊断图（示例为含更多协变量的拟合）。关注残差是否呈系统性弯曲、是否存在高杠杆影响点。</figcaption>
+          </figure>
+
+          <h3 id="p3-glm">3.2 Logistic 回归</h3>
+          <div class="step">Step 14 / 构造二分类结局 death</div>
           <pre><code class="language-r">mel$death = ifelse(mel$status == 1, 1, 0)
-fit_glm = glm(death ~ age + thickness + ulcer + factor(sex),
+table(mel$death)</code></pre>
+
+          <div class="step">Step 15 / 拟合与 OR、95%CI</div>
+          <pre><code class="language-r">fit_glm = glm(death ~ age + thickness + ulcer + factor(sex),
               data = mel, family = binomial)
 summary(fit_glm)
 
-# OR 与 95% CI
 exp(cbind(OR = coef(fit_glm), confint(fit_glm)))</code></pre>
+          <div class="callout tip">
+            <strong>OR 读法</strong>：某变量 OR = 1.5 表示，在模型中其他变量固定时，该变量每增加 1 个单位，<strong>优势（odds）</strong> 约为原来的 1.5 倍；OR &lt; 1 表示优势降低。二分类 0/1 预测变量时，OR 可理解为两组优势比。
+          </div>
+
+          <div class="step">Step 16 / 预测概率分布（可选）</div>
+          <pre><code class="language-r">p_hat = predict(fit_glm, type = "response")
+hist(p_hat, breaks = 18, col = "#93c5fd", border = "white",
+     main = "Predicted probability of death", xlab = "p(death=1)")</code></pre>
+          <figure class="figure-card narrow" aria-label="预测概率直方图">
+            <img src="figures/p06-prob-hist.png" alt="predicted probability histogram">
+            <figcaption>图 4：Logistic 模型预测死亡概率的分布。可观察模型是否把概率集中在某一区间，以及是否存在极端预测值。</figcaption>
+          </figure>
         </section>
 
         <section class="exercise" id="p4">
-          <h2>4. 结果整理为“可报告”表格</h2>
+          <h2>4. 整理输出</h2>
           <div class="callout tip">
-            <strong>目标</strong>：把模型输出整理成 1 张简洁表格（变量、估计值、区间、p 值），便于写进实验报告。
+            <strong>本节目标</strong>：把控制台散落的数字整理成<strong>结构化表格</strong>与<strong>连贯文字</strong>，使他人仅阅读报告即可理解分析过程与主要发现。
           </div>
-          <div class="step">Step 7 / 线性回归：系数表</div>
+
+          <h3 id="p4-tbl">4.1 模型结果表</h3>
+          <div class="step">Step 17 / 线性回归系数表</div>
           <pre><code class="language-r">co = summary(fit_lm)$coef
 out_lm = data.frame(
   term = rownames(co),
   estimate = co[, "Estimate"],
   se = co[, "Std. Error"],
+  ci_lo = confint(fit_lm)[, 1],
+  ci_hi = confint(fit_lm)[, 2],
   p = co[, "Pr(>|t|)"],
   row.names = NULL
 )
-head(out_lm)</code></pre>
+out_lm</code></pre>
 
-          <div class="step">Step 8 / Logistic：OR 表</div>
+          <div class="step">Step 18 / Logistic OR 表</div>
           <pre><code class="language-r">co2 = summary(fit_glm)$coef
 ci2 = confint(fit_glm)
 out_glm = data.frame(
@@ -126,18 +342,69 @@ out_glm = data.frame(
   p = co2[, "Pr(>|z|)"],
   row.names = NULL
 )
-head(out_glm)</code></pre>
+out_glm</code></pre>
+          <div class="callout ok">
+            <strong>表格规范</strong>：提交时保留变量名（<code>term</code>）、点估计、区间与 <code>p</code> 值；对 Logistic 模型报告 OR 而非原始 log-odds 系数，便于读者理解。
+          </div>
+
+          <h3 id="p4-rpt">4.2 报告段落模板</h3>
+          <div class="callout tip">
+            <strong>描述段（示例句式）</strong>
+            <p class="mini">本研究纳入 <code>nrow(mel)</code> 例黑色素瘤患者。<code>thickness</code> 均值为 …，标准差为 …；<code>ulcer=1</code> 者占 …%。按溃疡分组，无溃疡组 <code>thickness</code> 中位数为 …，有溃疡组为 …（见图 1）。</p>
+          </div>
+          <div class="callout tip">
+            <strong>推断段（示例句式）</strong>
+            <p class="mini">Welch t 检验显示，有溃疡与无溃疡者 <code>thickness</code> 均值差为 …，95%CI […, …]，<code>p</code> = …；Wilcoxon 检验 <code>p</code> = …，结果方向一致。</p>
+          </div>
+          <div class="callout tip">
+            <strong>回归段（示例句式）</strong>
+            <p class="mini">多重线性回归中，在调整年龄、性别与年份后，<code>ulcer</code> 与更高的 <code>thickness</code> 相关联（β = …，95%CI […, …]，<code>p</code> = …）。Logistic 回归中，<code>thickness</code> 与死亡风险相关联（OR = …，95%CI […, …]，<code>p</code> = …）。上述结果提示关联方向，不作因果推断。</p>
+          </div>
+
+          <div class="step">Step 19 / 导出表格（可选）</div>
+          <pre><code class="language-r">write.csv(out_lm,  "capstone_lm_coef.csv",  row.names = FALSE)
+write.csv(out_glm, "capstone_glm_or.csv",   row.names = FALSE)</code></pre>
         </section>
 
         <section class="exercise" id="p5">
           <h2>5. 提交要求</h2>
-          <div class="callout tip"><strong>提交要求</strong>：按下列条目给出相应输出与简要说明。</div>
+          <div class="callout tip"><strong>提交说明</strong>：需提交可复现脚本、图表、结果表与文字结论。下列条目为最低要求；文中各 Step 与 callout 供完成作业时参考。</div>
 
+          <div class="starter-label">A. 数据载入与变量说明</div>
           <ul class="checklist">
-            <li><strong>图</strong>：提交 1 张分组箱线图（或你选择的其他同主题图）。</li>
-            <li><strong>推断结论</strong>：提交 Welch 与 Wilcoxon 的 p 值，并用 1 句话写结论（对厚度的组间差异）。</li>
-            <li><strong>模型表</strong>：提交 <code>out_lm</code> 与 <code>out_glm</code>（可只截取你认为关键的 4–6 行），并各写 1 句话解释。</li>
-            <li><strong>可复现性</strong>：提交你最终脚本（或关键代码段），保证从载入到输出可以一次运行得到同样结果。</li>
+            <li>提交 <code>str(mel)</code> 或 <code>summary(mel)</code> 的关键输出（文本或截图）。</li>
+            <li>用<strong>3–5 句话</strong>说明：本分析中 <code>thickness</code>、<code>ulcer</code>、<code>death</code> 分别扮演什么角色。</li>
+          </ul>
+
+          <div class="starter-label">B. 描述统计与图表</div>
+          <ul class="checklist">
+            <li>提交 <code>thickness</code>、<code>age</code> 的均值与标准差（或中位数与四分位距，并说明为何选用）。</li>
+            <li>提交按 <code>ulcer</code> 分组的 <code>thickness</code> 描述（<code>by()</code> 或 <code>aggregate()</code> 输出）。</li>
+            <li>提交<strong>图 1</strong>（箱线图，可自行重绘或引用本页示例图）。</li>
+            <li>提交 <code>table(ulcer, sex)</code> 及按列构成比。</li>
+          </ul>
+
+          <div class="starter-label">C. 推断分析</div>
+          <ul class="checklist">
+            <li>提交 Welch t 检验的<strong>均值差、95%CI 与 p 值</strong>。</li>
+            <li>提交 Wilcoxon 检验的 <code>p</code> 值。</li>
+            <li>用<strong>2–3 句话</strong>概括组间差异及统计结论（勿写因果）。</li>
+            <li>提交 <code>chisq.test</code> 或 <code>fisher.test</code> 中你认为更合适的一项结果，并简述选择理由。</li>
+          </ul>
+
+          <div class="starter-label">D. 回归建模</div>
+          <ul class="checklist">
+            <li>提交 <code>summary(fit_lm)</code> 系数表（或整理后的 <code>out_lm</code>）。</li>
+            <li>提交 <code>out_glm</code>（OR 与 95%CI）。</li>
+            <li>各用<strong>1–2 句话</strong>解释 <code>ulcer</code> 在线性模型与 Logistic 模型中的系数/OR 含义。</li>
+            <li>提交<strong>图 2、图 3 或图 4</strong> 中的至少 1 张（与模型相关的诊断或预测图）。</li>
+          </ul>
+
+          <div class="starter-label">E. 报告文字与可复现性</div>
+          <ul class="checklist">
+            <li>按第 4.2 节模板，写<strong>描述、推断、回归</strong>三段文字（可合并为一份小结，每段 2–4 句）。</li>
+            <li>提交完整 R 脚本（<code>.R</code> 文件或可复制代码块），从载入数据到生成 <code>out_lm</code>、<code>out_glm</code> 可一次运行完成。</li>
+            <li>在脚本开头注明 R 版本与所用包（至少 <code>MASS</code>）。</li>
           </ul>
         </section>
       </article>
@@ -206,4 +473,3 @@ head(out_glm)</code></pre>
   <script>hljs.highlightAll();</script>
 </body>
 </html>
-
